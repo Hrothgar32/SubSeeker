@@ -3,6 +3,8 @@ package com.subseekerapp;
 import java.io.*;
 import java.net.URL;
 import java.net.HttpURLConnection;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
 
@@ -15,31 +17,31 @@ import org.jdom2.output.XMLOutputter;
 import org.jdom2.xpath.XPathFactory;
 import org.jdom2.xpath.XPathExpression;
 
+
 public abstract class MethodCaller{
 
     private static Document currentDocument;
 
     private static void SendRequest(File xmlToSend){
-        File poka = xmlToSend;
         try{
             URL url = new URL("https://api.opensubtitles.org/xml-rpc");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setDoOutput(true);
             connection.setInstanceFollowRedirects(false);
             connection.setRequestMethod("POST");
-            connection.setRequestProperty("User-Agent","SubSeeker1");
+            connection.setRequestProperty("User-Agent","subseeker1");
             connection.setRequestProperty("Host","https://api.opensubtitles.org/xml-rpc");
             connection.setRequestProperty("Content-Type","text/xml");
             OutputStreamWriter os = new OutputStreamWriter(connection.getOutputStream());
-            BufferedReader gop =  new BufferedReader(new FileReader(poka));
-            String a = gop.readLine();
+            BufferedReader gop =  new BufferedReader(new FileReader(xmlToSend));
+            StringBuilder a = new StringBuilder(gop.readLine());
             String k;
             try{
-                while((k = gop.readLine()).isEmpty() != true)
-                    a += k + '\n';
+                while(!(k = gop.readLine()).isEmpty())
+                    a.append(k).append('\n');
             }catch (NullPointerException ex){}
            // System.out.println(a);
-            os.write(a, 0, a.length());
+            os.write(a.toString(), 0, a.length());
             os.flush();
             // reading the response
             System.out.println(connection.getResponseCode());
@@ -60,7 +62,7 @@ public abstract class MethodCaller{
     private static void ReceiveRequest(String currentResponse){
         try{
             SAXBuilder builder = new SAXBuilder();
-            InputStream stream = new ByteArrayInputStream(currentResponse.getBytes("UTF-8"));
+            InputStream stream = new ByteArrayInputStream(currentResponse.getBytes(StandardCharsets.UTF_8));
             currentDocument = builder.build(stream);
         }catch (Exception ex){ex.printStackTrace();}
     }
@@ -111,7 +113,7 @@ public abstract class MethodCaller{
 
         try {
             XMLOutputter xmlOutputter = new XMLOutputter(Format.getPrettyFormat());
-            File k = new File("C:\\Users\\zolda\\IdeaProjects\\SubSeeker\\src\\com\\subseekerapp\\method.xml");
+            File k = new File(Paths.get("").toAbsolutePath().toString() + "method.xml");
             xmlOutputter.output(logRequest, new FileOutputStream(k));
             SendRequest(k);
             return parseLoginResponse();
@@ -130,7 +132,7 @@ public abstract class MethodCaller{
     private static void outputResponse(String whereTo){
         try{
             XMLOutputter outputter = new XMLOutputter(Format.getPrettyFormat());
-            File p = new File("C:\\Users\\zolda\\IdeaProjects\\SubSeeker\\src\\com\\subseekerapp\\" + whereTo);
+            File p = new File(Paths.get("").toAbsolutePath().toString() + whereTo);
             outputter.output(currentDocument,new FileOutputStream(p));
         }catch (IOException ex){}
     }
@@ -185,7 +187,7 @@ public abstract class MethodCaller{
 
         try {
             XMLOutputter xmlOutputter = new XMLOutputter(Format.getPrettyFormat());
-            File k = new File("C:\\Users\\zolda\\IdeaProjects\\SubSeeker\\src\\com\\subseekerapp\\method.xml");
+            File k = new File(Paths.get("").toAbsolutePath().toString() + "method.xml");
             xmlOutputter.output(logOutRequest, new FileOutputStream(k));
             SendRequest(k);
             return parseLogOutResponse();
@@ -268,7 +270,7 @@ public abstract class MethodCaller{
         methodCall.addContent(params);
         try {
             XMLOutputter xmlOutputter = new XMLOutputter(Format.getPrettyFormat());
-            File k = new File("C:\\Users\\zolda\\IdeaProjects\\SubSeeker\\src\\com\\subseekerapp\\method.xml");
+            File k = new File(Paths.get("").toAbsolutePath().toString() + "method.xml");
             xmlOutputter.output(searchRequest, new FileOutputStream(k));
             SendRequest(k);
             outputResponse("search.xml");
@@ -317,10 +319,11 @@ public abstract class MethodCaller{
         methodCall.addContent(params);
         try {
             XMLOutputter xmlOutputter = new XMLOutputter(Format.getPrettyFormat());
-            File k = new File("C:\\Users\\zolda\\IdeaProjects\\SubSeeker\\src\\com\\subseekerapp\\method.xml");
+            File k = new File(Paths.get("").toAbsolutePath().toString() + "method.xml");
             xmlOutputter.output(downloadRequest, new FileOutputStream(k));
             SendRequest(k);
             outputResponse("downloaded.xml");
+            System.out.println(names);
             parseDownloadResponse(names,addresses);
         }catch (Exception ex){}
     }

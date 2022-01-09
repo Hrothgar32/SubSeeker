@@ -6,6 +6,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -132,20 +134,15 @@ public class SubSeekerGUI {
             moviePanel.add(idLabel);
             for(int i = 0; i < subFileIDs.size(); i++){
                 MovieBuff movieSelection = new MovieBuff(imdbID,subFileIDs.get(i).getText(),subFileNames.get(i).getText());
-                moviePanel.add(movieSelection.getBuffPanel());
+                moviePanel.add(movieSelection);
             }
             displayPanel.add(moviePanel);
         }
-        class MovieBuff{
-            private JPanel buffPanel;
+        class MovieBuff extends JPanel{
             private JCheckBox isDown;
             private JLabel nameLabel;
             private String subFileID;
             private String imdbID;
-
-            public JPanel getBuffPanel() {
-                return buffPanel;
-            }
 
             public JCheckBox getIsDown() {
                 return isDown;
@@ -158,11 +155,17 @@ public class SubSeekerGUI {
             public MovieBuff(String imdbID, String subFileID, String subFileNames){
                 this.subFileID = subFileID;
                 this.imdbID = imdbID;
-                buffPanel = new JPanel();
                 isDown = new JCheckBox();
+                isDown.addItemListener(new ItemListener() {
+                    @Override
+                    public void itemStateChanged(ItemEvent e) {
+                        movieData.getSubtitlesToDownload().add(subFileID);
+                        movieData.getSubtitlesNames().add(subFileNames);
+                    }
+                });
                 nameLabel = new JLabel(subFileNames);
-                buffPanel.add(isDown);
-                buffPanel.add(nameLabel);
+                add(isDown);
+                add(nameLabel);
             }
         }
     }
@@ -175,15 +178,17 @@ public class SubSeekerGUI {
             movieNameField.setText(a.getSelectedFile().getName());
             try{
                 File curMovieFile = a.getSelectedFile();
-                movieData.getMovieAddresses().add(curMovieFile.getAbsolutePath());
-                String hash = myHasher.computeHash(curMovieFile);
+                movieData.getMovieAddresses().add(curMovieFile.getParent());
+                String hash = OpenSubtitlesHasher.computeHash(curMovieFile);
                 long size = curMovieFile.length();
                 String language = (String) languageBox.getSelectedItem();
                 movieData.getMovieByteSizes().add(size);
                 movieData.getMovieHashes().add(hash);
                 movieData.getMovieLangs().add(language);
                 System.out.println("Movie with hash:" + hash + " and size:" + size + " added!");
-            }catch (IOException ex){}
+            }catch (IOException ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
